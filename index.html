@@ -74,9 +74,7 @@
         }
         .num-input-group input::-webkit-inner-spin-button, 
         .num-input-group input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        
         .num-unit { font-size: 0.8rem; color: #94a3b8; pointer-events: none; position: absolute; right: 35px; top: 50%; transform: translateY(-50%); }
-        
         .spin-btns { display: flex; flex-direction: column; border-left: 1px solid #475569; height: 100%; width: 25px; position: absolute; right: 0; top: 0; }
         .spin-btn {
             flex: 1; background: #1e293b; border: none; color: #94a3b8; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -123,10 +121,7 @@
             transition: color 0.2s, background 0.2s;
             border-radius: 8px;
         }
-        .modal-nav-btn:hover {
-            color: white;
-            background: rgba(255,255,255,0.1);
-        }
+        .modal-nav-btn:hover { color: white; background: rgba(255,255,255,0.1); }
         .modal-nav-btn.left { left: 10px; }
         .modal-nav-btn.right { right: 10px; }
 
@@ -140,19 +135,58 @@
         .zoom-slider { -webkit-appearance: none; width: 200px; height: 4px; background: #475569; border-radius: 2px; }
         .zoom-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: white; border-radius: 50%; cursor: pointer; }
         
+        /* Desktop Sidebar */
         .modal-sidebar { width: 360px; min-width: 360px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
         
         .mobile-fab { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; width: 56px; height: 56px; border-radius: 50%; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 30; cursor: pointer; }
+        
+        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 900px) {
             .sidebar { position: fixed; inset: 0; transform: translateY(100%); width: 100%; z-index: 40; }
             .sidebar.mobile-open { transform: translateY(0); }
             .sidebar-close-icon { display: flex; }
             .mobile-fab { display: flex; }
+            
+            /* Modal Layout: Top Image, Bottom Sheet Controls */
             .modal-overlay { flex-direction: column; }
-            .modal-main { height: 55%; padding: 0; } 
-            .modal-sidebar { width: 100%; height: 45%; border-left: none; border-top: 1px solid var(--border); padding: 15px; }
-            .modal-nav-btn { display: none; } /* Hide on mobile for now, or adjust placement */
+            
+            /* Image Area */
+            .modal-main { 
+                height: 55%; 
+                width: 100%; 
+                padding: 0; 
+                background: #000; /* Better contrast for photos */
+            } 
+            
+            /* Sidebar (Bottom Sheet) */
+            .modal-sidebar { 
+                width: 100%; 
+                min-width: 100%; 
+                height: 45%; 
+                border-left: none; 
+                border-top: 1px solid var(--border); 
+                padding: 15px; 
+                background: var(--bg-panel);
+                border-radius: 20px 20px 0 0; /* Rounded top corners */
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+            }
+
+            /* Mobile Navigation Buttons */
+            .modal-nav-btn {
+                width: 40px; height: 40px; /* Circle shape */
+                background: rgba(0,0,0,0.5); /* Darker background */
+                border-radius: 50%;
+                font-size: 1rem;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+            .modal-nav-btn.left { left: 15px; }
+            .modal-nav-btn.right { right: 15px; }
+            
+            /* Zoom control adjustment */
+            .zoom-controls { bottom: 15px; padding: 8px 15px; }
+            .zoom-slider { width: 150px; }
         }
+
         .loader-overlay { position: fixed; inset: 0; background: var(--bg-body); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
@@ -400,12 +434,10 @@
         let currentEditId = null;
         let draftSettings = null; 
         let cropState = { isDragging: false, startX: 0, startY: 0, initialTx: 0, initialTy: 0 };
-        
-        // MODAL HISTORY
         let undoStack = [], redoStack = [];
         let isSliderInteracting = false;
         
-        // GLOBAL HISTORY & STATE
+        // GLOBAL HISTORY
         let g_lastGlobalState = null;
         let g_undoStack = [], g_redoStack = [];
         let g_isSliderInteracting = false;
