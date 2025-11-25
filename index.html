@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Watermark Studio Pro</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,13 +19,11 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
         
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-        /* LAYOUT */
         .app-shell { display: flex; width: 100%; height: 100%; position: relative; }
         .sidebar { width: 340px; min-width: 340px; flex-shrink: 0; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px; z-index: 20; overflow-y: auto; overflow-x: hidden; transition: transform 0.3s ease; position: relative; }
         .sidebar-close-icon { display: none; position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border-radius: 50%; align-items: center; justify-content: center; cursor: pointer; z-index: 30; }
@@ -37,7 +34,6 @@
         .gallery-scroll { flex-grow: 1; overflow-y: auto; padding: 24px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
         
-        /* Cards */
         .photo-card { aspect-ratio: 1; background: #1e293b; border-radius: var(--radius); overflow: hidden; position: relative; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
         .photo-card:hover { border-color: var(--primary); transform: translateY(-2px); }
         .photo-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
@@ -47,7 +43,6 @@
         .photo-card.processing .card-loader { opacity: 1; }
         .card-loader { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
 
-        /* Accordion & Form */
         .control-group { margin-bottom: 0; border-bottom: 1px solid var(--border); }
         .control-group:last-child { border-bottom: none; }
         .accordion-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 16px 0; user-select: none; }
@@ -65,25 +60,15 @@
         
         select, input[type="text"], input[type="number"] { width: 100%; padding: 10px; background: #334155; border: 1px solid #475569; color: white; border-radius: 6px; outline: none; font-size: 0.85rem; }
         
-        /* --- PRO NUMBER INPUT --- */
-        .num-input-group {
-            display: flex; align-items: center; background: #334155; border: 1px solid #475569; border-radius: 6px; overflow: hidden; height: 38px; position: relative;
-        }
-        .num-input-group input {
-            background: transparent; border: none; color: white; text-align: left; width: 100%; padding: 0 35px 0 10px; -moz-appearance: textfield;
-        }
-        .num-input-group input::-webkit-inner-spin-button, 
-        .num-input-group input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .num-input-group { display: flex; align-items: center; background: #334155; border: 1px solid #475569; border-radius: 6px; overflow: hidden; height: 38px; position: relative; }
+        .num-input-group input { background: transparent; border: none; color: white; text-align: left; width: 100%; padding: 0 35px 0 10px; -moz-appearance: textfield; }
+        .num-input-group input::-webkit-inner-spin-button, .num-input-group input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .num-unit { font-size: 0.8rem; color: #94a3b8; pointer-events: none; position: absolute; right: 35px; top: 50%; transform: translateY(-50%); }
         .spin-btns { display: flex; flex-direction: column; border-left: 1px solid #475569; height: 100%; width: 25px; position: absolute; right: 0; top: 0; }
-        .spin-btn {
-            flex: 1; background: #1e293b; border: none; color: #94a3b8; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: background 0.2s; padding: 0;
-        }
+        .spin-btn { flex: 1; background: #1e293b; border: none; color: #94a3b8; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; padding: 0; }
         .spin-btn:hover { background: #475569; color: white; }
         .spin-btn:first-child { border-bottom: 1px solid #475569; }
 
-        /* Sliders */
         input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; background: #475569; border-radius: 2px; outline: none; margin: 10px 0; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--primary); border-radius: 50%; cursor: pointer; transition: 0.2s; }
         input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
@@ -93,37 +78,63 @@
         .btn-success { background: var(--success); color: white; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* History Toolbar */
         .history-toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
         .hist-btn { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; }
         .hist-btn:hover { background: rgba(255,255,255,0.1); }
         .hist-btn:disabled { opacity: 0.3; cursor: default; }
 
-        /* Modal */
+        /* TOAST NOTIFICATION */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { pointer-events: auto; background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 500; border: 1px solid rgba(255,255,255,0.1); }
+        .toast.success i { color: var(--success); }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-20px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes toastOut { to { opacity: 0; transform: translateY(-10px); } }
+
+        /* PROGRESS OVERLAY */
+        #progressOverlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); z-index: 10000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .progress-box { width: 300px; text-align: center; }
+        .progress-bar-bg { width: 100%; height: 8px; background: #334155; border-radius: 4px; overflow: hidden; margin-top: 15px; }
+        .progress-bar-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.2s; }
+        .progress-text { color: white; font-weight: 600; margin-bottom: 5px; }
+        .progress-sub { color: #94a3b8; font-size: 0.85rem; }
+
+        /* MODAL */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 50; display: none; opacity: 0; transition: opacity 0.2s; flex-direction: row; }
         .modal-overlay.active { display: flex; opacity: 1; }
         .modal-main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 20px; overflow: hidden; }
         
-        /* Modal Navigation Buttons */
-        .modal-nav-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 60px;
-            height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: rgba(255,255,255,0.5);
+        /* UNIFIED BUTTON STYLE FOR CLOSE & NAV */
+        .modal-action-btn {
+            position: absolute; z-index: 60;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
             cursor: pointer;
-            z-index: 60;
-            transition: color 0.2s, background 0.2s;
-            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
         }
-        .modal-nav-btn:hover { color: white; background: rgba(255,255,255,0.1); }
-        .modal-nav-btn.left { left: 10px; }
-        .modal-nav-btn.right { right: 10px; }
+        .modal-action-btn:hover { background: rgba(0,0,0,0.8); border-color: rgba(255,255,255,0.4); }
+
+        /* Specific Button Positioning */
+        .modal-close-btn {
+            top: 20px; left: 20px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem; font-weight: 600; gap: 8px;
+        }
+        
+        .modal-nav-btn {
+            top: 50%; transform: translateY(-50%);
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+        }
+        .modal-nav-btn.left { left: 20px; }
+        .modal-nav-btn.right { right: 20px; }
 
         .crop-stage { position: relative; background: #000; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); overflow: visible; cursor: move; border: 1px solid rgba(255,255,255,0.2); }
         .crop-image-container { width: 100%; height: 100%; position: relative; overflow: visible; }
@@ -135,62 +146,55 @@
         .zoom-slider { -webkit-appearance: none; width: 200px; height: 4px; background: #475569; border-radius: 2px; }
         .zoom-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: white; border-radius: 50%; cursor: pointer; }
         
-        /* Desktop Sidebar */
         .modal-sidebar { width: 360px; min-width: 360px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
-        
+        .modal-button-container { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+
         .mobile-fab { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; width: 56px; height: 56px; border-radius: 50%; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 30; cursor: pointer; }
         
-        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 900px) {
             .sidebar { position: fixed; inset: 0; transform: translateY(100%); width: 100%; z-index: 40; }
             .sidebar.mobile-open { transform: translateY(0); }
             .sidebar-close-icon { display: flex; }
             .mobile-fab { display: flex; }
             
-            /* Modal Layout: Top Image, Bottom Sheet Controls */
             .modal-overlay { flex-direction: column; }
-            
-            /* Image Area */
-            .modal-main { 
-                height: 55%; 
-                width: 100%; 
-                padding: 0; 
-                background: #000; /* Better contrast for photos */
-            } 
-            
-            /* Sidebar (Bottom Sheet) */
-            .modal-sidebar { 
-                width: 100%; 
-                min-width: 100%; 
-                height: 45%; 
-                border-left: none; 
-                border-top: 1px solid var(--border); 
-                padding: 15px; 
-                background: var(--bg-panel);
-                border-radius: 20px 20px 0 0; /* Rounded top corners */
-                box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
-            }
+            .modal-main { height: 45%; width: 100%; padding: 0; background: #000; } 
+            .modal-sidebar { width: 100%; min-width: 100%; height: 55%; border-left: none; border-top: 1px solid var(--border); padding: 15px; background: var(--bg-panel); border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.3); }
 
-            /* Mobile Navigation Buttons */
-            .modal-nav-btn {
-                width: 40px; height: 40px; /* Circle shape */
-                background: rgba(0,0,0,0.5); /* Darker background */
-                border-radius: 50%;
-                font-size: 1rem;
-                border: 1px solid rgba(255,255,255,0.1);
+            /* Mobile Button Styles */
+            .modal-close-btn {
+                top: 15px; left: 15px; 
+                width: 40px; height: 40px;
+                padding: 0; border-radius: 50%;
+                justify-content: center;
             }
+            .desktop-text { display: none; }
+
+            /* Nav Buttons for Mobile */
+            .modal-nav-btn { width: 40px; height: 40px; font-size: 1rem; }
             .modal-nav-btn.left { left: 15px; }
             .modal-nav-btn.right { right: 15px; }
             
-            /* Zoom control adjustment */
             .zoom-controls { bottom: 15px; padding: 8px 15px; }
             .zoom-slider { width: 150px; }
         }
-
         .loader-overlay { position: fixed; inset: 0; background: var(--bg-body); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
+
+    <div id="toast-container"></div>
+
+    <div id="progressOverlay">
+        <div class="progress-box">
+            <div class="progress-text">Downloading...</div>
+            <div class="progress-sub" id="progressCount">0 of 0</div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <div style="margin-top: 15px; font-size: 0.8rem; color: #64748b;">Please allow multiple file downloads if prompted.</div>
+        </div>
+    </div>
 
     <div id="initLoader" class="loader-overlay">
         <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 15px;"></i>
@@ -289,7 +293,7 @@
                     </div>
                 </div>
             </div>
-            <button class="btn btn-success" id="downloadBtn" onclick="downloadZip()" disabled>Download ZIP</button>
+            <button class="btn btn-success" id="downloadBtn" onclick="downloadAllSequentially()" disabled>Download All</button>
         </aside>
 
         <main class="main-area">
@@ -307,16 +311,17 @@
 
     <div class="modal-overlay" id="editorModal">
         <div class="modal-main">
-            <div class="modal-nav-btn left" onclick="navigateModal(-1)">
+            <div class="modal-action-btn modal-nav-btn left" onclick="navigateModal(-1)">
                 <i class="fa-solid fa-chevron-left"></i>
             </div>
-            <div class="modal-nav-btn right" onclick="navigateModal(1)">
+            <div class="modal-action-btn modal-nav-btn right" onclick="navigateModal(1)">
                 <i class="fa-solid fa-chevron-right"></i>
             </div>
 
-            <div style="position: absolute; top: 20px; left: 20px; z-index: 50;">
-                <button class="btn" style="background: rgba(255,255,255,0.2); color: white; padding: 8px 16px; margin:0;" onclick="closeModal()">Close (Esc)</button>
+            <div class="modal-action-btn modal-close-btn" onclick="closeModal()">
+                <i class="fa-solid fa-xmark"></i> <span class="desktop-text">Close (Esc)</span>
             </div>
+
             <div id="cropStage" class="crop-stage">
                 <div class="crop-image-container">
                     <img id="cropImg" class="crop-image" src="" alt="Editable">
@@ -350,7 +355,6 @@
                     <div class="accordion-header" onclick="toggleAccordion(this)"><span class="accordion-title">Logo</span><i class="fa-solid fa-chevron-right accordion-icon"></i></div>
                     <div class="accordion-content">
                         <div class="form-row"><select id="m_logoColor" onchange="commitChange('logoColor', this.value)"><option value="white">White</option><option value="black">Black</option><option value="green">Green</option></select><select id="m_logoPos" onchange="commitChange('logoPos', this.value)"><option value="br">Bot Right</option><option value="bl">Bot Left</option><option value="tr">Top Right</option><option value="tl">Top Left</option><option value="center">Center</option></select></div>
-                        
                         <div class="form-row">
                             <div class="form-col" style="flex: 1;">
                                 <label class="form-label">Size</label>
@@ -367,7 +371,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="form-row"><div class="form-col"><label class="form-label">Opacity</label><select id="m_logoOpacity" onchange="commitChange('logoOpacity', parseFloat(this.value))"><option value="1.0">100%</option><option value="0.5">50%</option><option value="0.2">20%</option></select></div></div>
                     </div>
                 </div>
@@ -376,7 +379,6 @@
                     <div class="accordion-content">
                         <div class="form-row"><input type="text" id="m_text" placeholder="Content" oninput="previewChange('text', this.value)" onchange="commitChange('text', this.value)"></div>
                         <div class="form-row"><select id="m_textPos" onchange="commitChange('textPos', this.value)"><option value="br">Bot Right</option><option value="bl">Bot Left</option><option value="tr">Top Right</option><option value="tl">Top Left</option><option value="center">Center</option></select><select id="m_textColor" onchange="commitChange('textColor', this.value)"><option value="white">White</option><option value="black">Black</option><option value="green">Green</option></select></div>
-                        
                         <div class="form-row">
                             <div class="form-col" style="flex: 1;">
                                 <label class="form-label">Size</label>
@@ -402,13 +404,27 @@
                     </div>
                 </div>
             </div>
-            <div style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <div class="modal-button-container">
                 <button class="btn btn-success" id="saveBtn" onclick="saveChanges()">Save Changes</button>
+                <button class="btn btn-primary" onclick="downloadSinglePng()"><i class="fa-solid fa-download"></i></button>
             </div>
         </div>
     </div>
 
     <script>
+        // --- GLOBAL FUNCTIONS ---
+        function showToast(msg, type='success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = "toastOut 0.3s forwards";
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         function toggleAccordion(element) {
             const currentGroup = element.closest('.control-group');
             const container = element.closest('.sidebar, .modal-sidebar');
@@ -437,7 +453,6 @@
         let undoStack = [], redoStack = [];
         let isSliderInteracting = false;
         
-        // GLOBAL HISTORY
         let g_lastGlobalState = null;
         let g_undoStack = [], g_redoStack = [];
         let g_isSliderInteracting = false;
@@ -454,10 +469,11 @@
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('downloadBtn').disabled = false;
             
-            // Initialize last state
-            g_lastGlobalState = getGlobalSettings();
+            if(window.innerWidth < 900) toggleSidebar();
 
+            g_lastGlobalState = getGlobalSettings();
             const globals = g_lastGlobalState;
+            
             for(let i=0; i<files.length; i++) {
                 const item = {
                     id: Date.now() + i,
@@ -470,6 +486,7 @@
                 await processImage(item);
             }
             updateGalleryCount();
+            showToast(`${files.length} Photos Uploaded`);
         }
 
         function getGlobalSettings() {
@@ -488,7 +505,6 @@
             };
         }
 
-        // --- AUTO APPLY LOGIC ---
         function triggerAutoApply() {
             clearTimeout(autoApplyTimer);
             autoApplyTimer = setTimeout(updateAllUnlockedImages, 300);
@@ -506,7 +522,6 @@
             await Promise.all(promises);
         }
 
-        // --- GLOBAL UI LOGIC & HISTORY ---
         function restoreGlobalState(s) {
             document.getElementById('g_ratio').value = s.ratio;
             document.getElementById('g_logoColor').value = s.logoColor;
@@ -517,54 +532,31 @@
             document.getElementById('g_textColor').value = s.textColor;
             document.getElementById('g_borderWidth').value = s.borderWidth;
             document.getElementById('g_borderColor').value = s.borderColor;
-            
             syncGlobalSize(s.logoSize, 'range', 'logo');
             syncGlobalSize(s.textSize, 'range', 'text');
-            
-            // After restoring inputs, update tracking var and apply
             g_lastGlobalState = s;
             updateGlobalHistoryButtons();
             updateAllUnlockedImages(); 
         }
 
         function commitGlobalChange() {
-            // Push previous state (g_lastGlobalState) to Undo
-            if (g_lastGlobalState) {
-                g_undoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
-            }
-            
-            // Update current state tracker
+            if (g_lastGlobalState) g_undoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
             g_lastGlobalState = getGlobalSettings();
-            
-            // Clear Redo since we made a new change
             g_redoStack = [];
-            
             updateGlobalHistoryButtons();
             updateAllUnlockedImages();
         }
 
         function undoGlobalAction() {
             if (g_undoStack.length === 0) return;
-            
-            // Save current to Redo
             g_redoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
-            
-            // Pop Previous
-            const prev = g_undoStack.pop();
-            
-            restoreGlobalState(prev);
+            restoreGlobalState(g_undoStack.pop());
         }
 
         function redoGlobalAction() {
             if (g_redoStack.length === 0) return;
-            
-            // Save current to Undo
             g_undoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
-            
-            // Pop Next
-            const next = g_redoStack.pop();
-            
-            restoreGlobalState(next);
+            restoreGlobalState(g_redoStack.pop());
         }
 
         function updateGlobalHistoryButtons() {
@@ -572,13 +564,9 @@
             document.getElementById('g_redoBtn').disabled = g_redoStack.length === 0;
         }
 
-        // Special handling for Sliders to only commit on start of interaction
         function startGlobalSlider() {
-            // Only push if we aren't already dragging
             if(g_isSliderInteracting) return;
             g_isSliderInteracting = true;
-            
-            // Push current state before drag starts
             if (g_lastGlobalState) {
                 g_undoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
                 g_redoStack = [];
@@ -586,7 +574,6 @@
             }
         }
         
-        // When drag ends, we update the "Last State" to the new value
         function endGlobalSlider() {
             if(!g_isSliderInteracting) return;
             g_isSliderInteracting = false;
@@ -598,42 +585,25 @@
 
         function syncGlobalSize(val, source, type) {
             let floatVal, intVal;
-            const min = (type === 'logo') ? 0.05 : 0.01;
-            const max = (type === 'logo') ? 0.8 : 0.15;
             const minPct = (type === 'logo') ? 5 : 1;
             const maxPct = (type === 'logo') ? 80 : 15;
-
-            if(source === 'range') { 
-                floatVal = parseFloat(val); 
-                intVal = Math.round(floatVal * 100); 
-            } else { 
-                intVal = parseInt(val); 
-                if(isNaN(intVal)) intVal = minPct; 
-                if(intVal < minPct) intVal = minPct; 
-                if(intVal > maxPct) intVal = maxPct;
-                floatVal = intVal / 100; 
-            }
-            
+            if(source === 'range') { floatVal = parseFloat(val); intVal = Math.round(floatVal * 100); } 
+            else { intVal = parseInt(val); if(isNaN(intVal)) intVal = minPct; if(intVal < minPct) intVal = minPct; if(intVal > maxPct) intVal = maxPct; floatVal = intVal / 100; }
             const prefix = (type === 'logo') ? 'g_logoSize' : 'g_textSize';
             document.getElementById(prefix).value = floatVal;
             document.getElementById(prefix + 'Num').value = intVal;
-            
             triggerAutoApply();
         }
 
         function stepGlobalSize(dir, type) {
-            // Treat step click like a distinct commit
             if (g_lastGlobalState) {
                 g_undoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
                 g_redoStack = [];
                 updateGlobalHistoryButtons();
             }
-            
             const id = (type === 'logo') ? 'g_logoSizeNum' : 'g_textSizeNum';
             let current = parseInt(document.getElementById(id).value) || ((type === 'logo')?20:3);
             syncGlobalSize(current + dir, 'number', type);
-            
-            // Update tracker
             g_lastGlobalState = getGlobalSettings();
         }
 
@@ -691,7 +661,7 @@
                             if(gridImg) gridImg.src = item.blobUrl;
                             document.getElementById(`card-${item.id}`).classList.remove('processing');
                             resolve();
-                        }, 'image/jpeg', 0.90);
+                        }, 'image/png', 1.0);
                     };
                     img.src = e.target.result;
                 };
@@ -756,11 +726,8 @@
             currentEditId = id;
             const item = appState.find(i => i.id === id);
             draftSettings = JSON.parse(JSON.stringify(item.settings));
-            
-            // Reset modal history for the new item
             undoStack = []; redoStack = []; updateHistoryButtons();
             
-            // Reset the save button text
             const saveBtn = document.getElementById('saveBtn');
             saveBtn.innerText = 'Save Changes';
             saveBtn.disabled = false;
@@ -826,32 +793,16 @@
             ctx.restore();
         }
 
-        // --- MODAL SIZE LOGIC ---
         function syncModalSize(val, source, type) {
             let floatVal, intVal;
-            const min = (type === 'logo') ? 0.05 : 0.01;
-            const max = (type === 'logo') ? 0.8 : 0.15;
             const minPct = (type === 'logo') ? 5 : 1;
             const maxPct = (type === 'logo') ? 80 : 15;
-
-            if(source === 'range') { 
-                floatVal = parseFloat(val); 
-                intVal = Math.round(floatVal * 100); 
-            } else { 
-                intVal = parseInt(val); 
-                if(isNaN(intVal)) intVal = minPct; 
-                if(intVal < minPct) intVal = minPct; 
-                if(intVal > maxPct) intVal = maxPct;
-                floatVal = intVal / 100; 
-            }
-            
+            if(source === 'range') { floatVal = parseFloat(val); intVal = Math.round(floatVal * 100); } 
+            else { intVal = parseInt(val); if(isNaN(intVal)) intVal = minPct; if(intVal < minPct) intVal = minPct; if(intVal > maxPct) intVal = maxPct; floatVal = intVal / 100; }
             const prefix = (type === 'logo') ? 'm_logoSize' : 'm_textSize';
             document.getElementById(prefix).value = floatVal;
             document.getElementById(prefix + 'Num').value = intVal;
-            
-            if(type === 'logo') draftSettings.logoSize = floatVal;
-            else draftSettings.textSize = floatVal;
-            
+            if(type === 'logo') draftSettings.logoSize = floatVal; else draftSettings.textSize = floatVal;
             drawPreviewOverlay();
         }
         
@@ -862,7 +813,6 @@
             syncModalSize(current + dir, 'number', type);
         }
 
-        // --- HISTORY ---
         function pushHistory() {
             undoStack.push(JSON.parse(JSON.stringify(draftSettings)));
             redoStack = [];
@@ -892,7 +842,6 @@
             document.getElementById('redoBtn').disabled = redoStack.length === 0;
         }
         
-        // Helper to handle slider history on drag start
         function startSliderInteraction() {
             if (isSliderInteracting) return;
             isSliderInteracting = true;
@@ -901,8 +850,6 @@
         document.addEventListener('mouseup', () => isSliderInteracting = false);
         document.addEventListener('touchend', () => isSliderInteracting = false);
 
-
-        // --- INPUTS ---
         function previewChange(key, val) {
             draftSettings[key] = val;
             if(key === 'ratio') { updateStageDimensions(val); applyCropVisuals(); }
@@ -998,68 +945,87 @@
             const item = appState.find(i => i.id === currentEditId);
             item.settings = JSON.parse(JSON.stringify(draftSettings));
             const btn = document.getElementById('saveBtn');
-            const originalText = btn.innerText;
-            
             btn.innerText = 'Saved!';
             btn.disabled = true;
-            
             await processImage(item);
-            
-            // Reset button state after 2 seconds if user is still on same item
-            setTimeout(() => {
-                if(currentEditId === item.id) {
-                    btn.innerText = 'Save Changes';
-                    btn.disabled = false;
-                }
-            }, 2000);
+            showToast('Changes saved');
+            setTimeout(() => { if(currentEditId === item.id) { btn.innerText = 'Save Changes'; btn.disabled = false; } }, 2000);
         }
         
+        // SEQUENTIAL DOWNLOAD LOGIC
+        async function downloadAllSequentially() {
+            if(!appState.length) return;
+            const btn = document.getElementById('downloadBtn');
+            const originalText = btn.innerText;
+            
+            btn.innerText = 'Downloading...';
+            btn.disabled = true;
+            
+            const overlay = document.getElementById('progressOverlay');
+            const pText = document.getElementById('progressCount');
+            const pBar = document.getElementById('progressBar');
+            
+            overlay.style.display = 'flex';
+            
+            let count = 0;
+            
+            for (const item of appState) {
+                count++;
+                
+                // Update UI
+                pText.innerText = `${count} of ${appState.length}`;
+                pBar.style.width = `${(count / appState.length) * 100}%`;
+                
+                // Save file
+                if (item.blob) {
+                    let name = item.file.name.replace(/\.[^/.]+$/, "") + "_watermarked.png";
+                    saveAs(item.blob, name);
+                }
+                
+                // Wait 1 second to prevent browser blocking
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            
+            // Finish
+            overlay.style.display = 'none';
+            btn.innerText = originalText;
+            btn.disabled = false;
+            showToast("All downloads initiated!");
+        }
+
+        function downloadSinglePng() {
+            if(!currentEditId) return;
+            const item = appState.find(i => i.id === currentEditId);
+            if(item && item.blob) {
+                let name = item.file.name.replace(/\.[^/.]+$/, "") + "_edited.png";
+                saveAs(item.blob, name);
+            } else {
+                showToast("Process image first", "error");
+            }
+        }
+
         function closeModal() {
             document.getElementById('editorModal').classList.remove('active');
             currentEditId = null; draftSettings = null; 
         }
-        function downloadZip() {
-            if(!appState.length) return;
-            const btn = document.getElementById('downloadBtn');
-            btn.innerText = 'Zipping...'; btn.disabled = true;
-            const zip = new JSZip();
-            const folder = zip.folder("Watermarked_Photos");
-            appState.forEach(item => { if(item.blob) folder.file(item.file.name, item.blob); });
-            zip.generateAsync({type:"blob"}).then(content => {
-                saveAs(content, "WatermarkStudio_Export.zip");
-                btn.innerText = 'Download ZIP'; btn.disabled = false;
-            });
-        }
+
         document.addEventListener('keydown', (e) => {
             if(!document.getElementById('editorModal').classList.contains('active')) return;
             if(e.key === 'Escape') closeModal();
             if(e.key === 'Enter') saveChanges();
             if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undoAction(); }
             if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redoAction(); }
-            
-            // Arrow key navigation
             if (e.key === 'ArrowLeft') navigateModal(-1);
             if (e.key === 'ArrowRight') navigateModal(1);
         });
 
-        // MODAL NAVIGATION
         function navigateModal(direction) {
             if (!currentEditId || appState.length <= 1) return;
-
             const currentIndex = appState.findIndex(i => i.id === currentEditId);
             let newIndex = currentIndex + direction;
-
-            // Handle wrap-around
             if (newIndex < 0) newIndex = appState.length - 1;
             if (newIndex >= appState.length) newIndex = 0;
-
-            const newItem = appState[newIndex];
-            
-            // Reset modal history for the new item
-            undoStack = []; redoStack = []; updateHistoryButtons();
-            
-            // Open the new item in the modal
-            openModal(newItem.id);
+            openModal(appState[newIndex].id);
         }
     </script>
 </body>
