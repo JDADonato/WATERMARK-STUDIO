@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Watermark Studio Pro</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #3b82f6; --primary-dark: #2563eb; --bg-body: #0f172a; --bg-panel: #1e293b;
+            --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155; --radius: 8px;
+            --success: #10b981; --brand-green: #275a3a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        /* LAYOUT */
+        .app-shell { display: flex; width: 100%; height: 100%; position: relative; }
+        .sidebar { width: 340px; min-width: 340px; flex-shrink: 0; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px; z-index: 20; overflow-y: auto; overflow-x: hidden; transition: transform 0.3s ease; position: relative; }
+        .sidebar-close-icon { display: none; position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border-radius: 50%; align-items: center; justify-content: center; cursor: pointer; z-index: 30; }
+        .brand { font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .brand i { color: var(--primary); }
+        .main-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .top-bar { height: 64px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .gallery-scroll { flex-grow: 1; overflow-y: auto; padding: 24px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+        
+        /* Cards */
+        .photo-card { aspect-ratio: 1; background: #1e293b; border-radius: var(--radius); overflow: hidden; position: relative; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+        .photo-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .photo-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
+        .lock-btn { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #cbd5e1; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; z-index: 5; }
+        .photo-card.locked { border-color: var(--success); }
+        .photo-card.locked .lock-btn { background: var(--success); color: white; border-color: var(--success); }
+        .photo-card.processing .card-loader { opacity: 1; }
+        .card-loader { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+
+        /* Accordion & Form */
+        .control-group { margin-bottom: 0; border-bottom: 1px solid var(--border); }
+        .control-group:last-child { border-bottom: none; }
+        .accordion-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 16px 0; user-select: none; }
+        .accordion-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; }
+        .accordion-icon { color: var(--text-muted); font-size: 0.8rem; transition: transform 0.3s ease; }
+        .control-group.open .accordion-icon { transform: rotate(90deg); }
+        .control-group.open .accordion-content { display: block; }
+        .accordion-content { display: none; padding-bottom: 24px; animation: slideDown 0.2s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .upload-btn { background: rgba(59, 130, 246, 0.1); border: 2px dashed var(--primary); color: var(--primary); padding: 16px; border-radius: var(--radius); text-align: center; cursor: pointer; font-weight: 600; display: flex; flex-direction: column; gap: 8px; align-items: center; margin-bottom: 24px; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .form-col { flex: 1; display: flex; flex-direction: column; }
+        .form-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block; }
+        
+        select, input[type="text"], input[type="number"] { width: 100%; padding: 10px; background: #334155; border: 1px solid #475569; color: white; border-radius: 6px; outline: none; font-size: 0.85rem; }
+        
+        /* --- PRO NUMBER INPUT --- */
+        .num-input-group {
+            display: flex; align-items: center; background: #334155; border: 1px solid #475569; border-radius: 6px; overflow: hidden; height: 38px; position: relative;
+        }
+        .num-input-group input {
+            background: transparent; border: none; color: white; text-align: left; width: 100%; padding: 0 35px 0 10px; -moz-appearance: textfield;
+        }
+        .num-input-group input::-webkit-inner-spin-button, 
+        .num-input-group input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .num-unit { font-size: 0.8rem; color: #94a3b8; pointer-events: none; position: absolute; right: 35px; top: 50%; transform: translateY(-50%); }
+        
+        .spin-btns { display: flex; flex-direction: column; border-left: 1px solid #475569; height: 100%; width: 25px; position: absolute; right: 0; top: 0; }
+        .spin-btn {
+            flex: 1; background: #1e293b; border: none; color: #94a3b8; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s; padding: 0;
+        }
+        .spin-btn:hover { background: #475569; color: white; }
+        .spin-btn:first-child { border-bottom: 1px solid #475569; }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; background: #475569; border-radius: 2px; outline: none; margin: 10px 0; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--primary); border-radius: 50%; cursor: pointer; transition: 0.2s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-top: 10px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* History Toolbar */
+        .history-toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
+        .hist-btn { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; }
+        .hist-btn:hover { background: rgba(255,255,255,0.1); }
+        .hist-btn:disabled { opacity: 0.3; cursor: default; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 50; display: none; opacity: 0; transition: opacity 0.2s; flex-direction: row; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 20px; overflow: hidden; }
+        
+        /* Modal Navigation Buttons */
+        .modal-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            z-index: 60;
+            transition: color 0.2s, background 0.2s;
+            border-radius: 8px;
+        }
+        .modal-nav-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+        .modal-nav-btn.left { left: 10px; }
+        .modal-nav-btn.right { right: 10px; }
+
+        .crop-stage { position: relative; background: #000; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); overflow: visible; cursor: move; border: 1px solid rgba(255,255,255,0.2); }
+        .crop-image-container { width: 100%; height: 100%; position: relative; overflow: visible; }
+        .crop-image { position: absolute; transform-origin: center center; user-select: none; pointer-events: none; }
+        .crop-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75); pointer-events: none; z-index: 10; }
+        .preview-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 15; pointer-events: none; }
+
+        .zoom-controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 20px; display: flex; align-items: center; gap: 15px; z-index: 20; }
+        .zoom-slider { -webkit-appearance: none; width: 200px; height: 4px; background: #475569; border-radius: 2px; }
+        .zoom-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: white; border-radius: 50%; cursor: pointer; }
+        
+        .modal-sidebar { width: 360px; min-width: 360px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+        
+        .mobile-fab { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; width: 56px; height: 56px; border-radius: 50%; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 30; cursor: pointer; }
+        @media (max-width: 900px) {
+            .sidebar { position: fixed; inset: 0; transform: translateY(100%); width: 100%; z-index: 40; }
+            .sidebar.mobile-open { transform: translateY(0); }
+            .sidebar-close-icon { display: flex; }
+            .mobile-fab { display: flex; }
+            .modal-overlay { flex-direction: column; }
+            .modal-main { height: 55%; padding: 0; } 
+            .modal-sidebar { width: 100%; height: 45%; border-left: none; border-top: 1px solid var(--border); padding: 15px; }
+            .modal-nav-btn { display: none; } /* Hide on mobile for now, or adjust placement */
+        }
+        .loader-overlay { position: fixed; inset: 0; background: var(--bg-body); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+    <div id="initLoader" class="loader-overlay">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 15px;"></i>
+        <div style="margin-top: 10px;">Loading Assets...</div>
+    </div>
+
+    <div class="app-shell">
+        <aside class="sidebar" id="mainSidebar">
+            <div class="sidebar-close-icon" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></div>
+            <div class="brand"><i class="fa-solid fa-layer-group"></i> Watermark Studio</div>
+            
+            <div class="history-toolbar" style="padding-bottom: 20px; margin-bottom: 10px; border-bottom: 1px solid var(--border);">
+                <button class="hist-btn" id="g_undoBtn" onclick="undoGlobalAction()" disabled><i class="fa-solid fa-rotate-left"></i> Undo</button>
+                <button class="hist-btn" id="g_redoBtn" onclick="redoGlobalAction()" disabled><i class="fa-solid fa-rotate-right"></i> Redo</button>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <label class="upload-btn">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.5rem;"></i><span>Select Images</span>
+                    <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span class="accordion-title">Canvas Size</span><i class="fa-solid fa-chevron-right accordion-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-row"><select id="g_ratio" onchange="commitGlobalChange()"><option value="original">Original</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span class="accordion-title">Logo Settings</span><i class="fa-solid fa-chevron-right accordion-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Color</label><select id="g_logoColor" onchange="commitGlobalChange()"><option value="white">White</option><option value="black">Black</option><option value="green">Green</option></select></div>
+                        <div class="form-col"><label class="form-label">Position</label><select id="g_logoPos" onchange="commitGlobalChange()"><option value="br">Bottom Right</option><option value="bl">Bottom Left</option><option value="tr">Top Right</option><option value="tl">Top Left</option><option value="center">Center</option></select></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex: 1;">
+                            <label class="form-label">Size</label>
+                            <input type="range" id="g_logoSize" min="0.05" max="0.8" step="0.01" value="0.2" onmousedown="startGlobalSlider()" oninput="syncGlobalSize(this.value, 'range', 'logo')">
+                        </div>
+                        <div class="form-col" style="width: 90px; flex: none;">
+                            <div class="num-input-group">
+                                <input type="number" id="g_logoSizeNum" min="5" max="80" value="20" onfocus="startGlobalSlider()" oninput="syncGlobalSize(this.value, 'number', 'logo')">
+                                <span class="num-unit">%</span>
+                                <div class="spin-btns">
+                                    <button class="spin-btn" onclick="stepGlobalSize(1, 'logo')"><i class="fa-solid fa-chevron-up"></i></button>
+                                    <button class="spin-btn" onclick="stepGlobalSize(-1, 'logo')"><i class="fa-solid fa-chevron-down"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row"><div class="form-col"><label class="form-label">Opacity</label><select id="g_logoOpacity" onchange="commitGlobalChange()"><option value="1.0">100%</option><option value="0.5">50%</option><option value="0.2">20%</option></select></div></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span class="accordion-title">Text Settings</span><i class="fa-solid fa-chevron-right accordion-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-row"><input type="text" id="g_text" placeholder="Content (e.g. © 2024)" onfocus="startGlobalSlider()" oninput="triggerAutoApply()" onchange="commitGlobalChange()"></div>
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Position</label><select id="g_textPos" onchange="commitGlobalChange()"><option value="br">Bottom Right</option><option value="bl">Bottom Left</option><option value="tr">Top Right</option><option value="tl">Top Left</option><option value="center">Center</option></select></div>
+                        <div class="form-col"><label class="form-label">Color</label><select id="g_textColor" onchange="commitGlobalChange()"><option value="white">White</option><option value="black">Black</option><option value="green">Green</option></select></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col" style="flex: 1;">
+                            <label class="form-label">Size</label>
+                            <input type="range" id="g_textSize" min="0.01" max="0.15" step="0.005" value="0.03" onmousedown="startGlobalSlider()" oninput="syncGlobalSize(this.value, 'range', 'text')">
+                        </div>
+                        <div class="form-col" style="width: 90px; flex: none;">
+                            <div class="num-input-group">
+                                <input type="number" id="g_textSizeNum" min="1" max="15" value="3" onfocus="startGlobalSlider()" oninput="syncGlobalSize(this.value, 'number', 'text')">
+                                <span class="num-unit">%</span>
+                                <div class="spin-btns">
+                                    <button class="spin-btn" onclick="stepGlobalSize(1, 'text')"><i class="fa-solid fa-chevron-up"></i></button>
+                                    <button class="spin-btn" onclick="stepGlobalSize(-1, 'text')"><i class="fa-solid fa-chevron-down"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span class="accordion-title">Border Settings</span><i class="fa-solid fa-chevron-right accordion-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="form-row">
+                        <div class="form-col"><label class="form-label">Thickness</label><select id="g_borderWidth" onchange="commitGlobalChange()"><option value="0">None</option><option value="15">Thin</option><option value="40">Thick</option></select></div>
+                        <div class="form-col"><label class="form-label">Color</label><select id="g_borderColor" onchange="commitGlobalChange()"><option value="white">White</option><option value="black">Black</option><option value="green">Green</option></select></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-success" id="downloadBtn" onclick="downloadZip()" disabled>Download ZIP</button>
+        </aside>
+
+        <main class="main-area">
+            <div class="top-bar">
+                <h3 id="galleryTitle">Gallery (0)</h3>
+                <div style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-lock" style="color:var(--success)"></i> = Locked</div>
+            </div>
+            <div class="gallery-scroll">
+                <div class="grid" id="grid"></div>
+                <div id="emptyState" style="text-align: center; margin-top: 50px; color: var(--text-muted);"><i class="fa-regular fa-images" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i><p>No images uploaded.</p></div>
+            </div>
+        </main>
+        <div class="mobile-fab" onclick="toggleSidebar()"><i class="fa-solid fa-sliders"></i></div>
+    </div>
+
+    <div class="modal-overlay" id="editorModal">
+        <div class="modal-main">
+            <div class="modal-nav-btn left" onclick="navigateModal(-1)">
+                <i class="fa-solid fa-chevron-left"></i>
+            </div>
+            <div class="modal-nav-btn right" onclick="navigateModal(1)">
+                <i class="fa-solid fa-chevron-right"></i>
+            </div>
+
+            <div style="position: absolute; top: 20px; left: 20px; z-index: 50;">
+                <button class="btn" style="background: rgba(255,255,255,0.2); color: white; padding: 8px 16px; margin:0;" onclick="closeModal()">Close (Esc)</button>
+            </div>
+            <div id="cropStage" class="crop-stage">
+                <div class="crop-image-container">
+                    <img id="cropImg" class="crop-image" src="" alt="Editable">
+                </div>
+                <canvas id="previewOverlay" class="preview-overlay"></canvas>
+                <div class="crop-mask"></div>
+            </div>
+            <div class="zoom-controls">
+                <i class="fa-solid fa-minus" style="color:white; font-size: 0.8rem;"></i>
+                <input type="range" id="zoomSlider" class="zoom-slider" min="0.1" max="3" step="0.05" value="1" oninput="handleZoomInput(this.value)">
+                <span id="zoomValueDisplay" style="color:white; font-size: 0.8rem; min-width: 40px; text-align: right;">100%</span>
+                <i class="fa-solid fa-plus" style="color:white; font-size: 0.8rem;"></i>
+            </div>
+        </div>
+
+        <div class="modal-sidebar">
+            <div class="history-toolbar">
+                <button class="hist-btn" id="undoBtn" onclick="undoAction()" disabled><i class="fa-solid fa-rotate-left"></i> Undo</button>
+                <button class="hist-btn" id="redoBtn" onclick="redoAction()" disabled><i class="fa-solid fa-rotate-right"></i> Redo</button>
+            </div>
+
+            <h3 style="margin-bottom: 20px; font-size: 1.1rem; border-bottom:1px solid var(--border); padding-bottom:15px;">Edit Photo</h3>
+            <div style="flex-grow: 1; overflow-y: auto;">
+                <div class="control-group">
+                    <div class="accordion-header" onclick="toggleAccordion(this)"><span class="accordion-title">Canvas Size</span><i class="fa-solid fa-chevron-right accordion-icon"></i></div>
+                    <div class="accordion-content">
+                        <div class="form-row"><select id="m_ratio" onchange="commitChange('ratio', this.value)"><option value="original">Original</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="accordion-header" onclick="toggleAccordion(this)"><span class="accordion-title">Logo</span><i class="fa-solid fa-chevron-right accordion-icon"></i></div>
+                    <div class="accordion-content">
+                        <div class="form-row"><select id="m_logoColor" onchange="commitChange('logoColor', this.value)"><option value="white">White</option><option value="black">Black</option><option value="green">Green</option></select><select id="m_logoPos" onchange="commitChange('logoPos', this.value)"><option value="br">Bot Right</option><option value="bl">Bot Left</option><option value="tr">Top Right</option><option value="tl">Top Left</option><option value="center">Center</option></select></div>
+                        
+                        <div class="form-row">
+                            <div class="form-col" style="flex: 1;">
+                                <label class="form-label">Size</label>
+                                <input type="range" id="m_logoSize" min="0.05" max="0.8" step="0.01" value="0.2" onmousedown="startSliderInteraction()" oninput="syncModalSize(this.value, 'range', 'logo')">
+                            </div>
+                            <div class="form-col" style="width: 90px; flex: none;">
+                                <div class="num-input-group">
+                                    <input type="number" id="m_logoSizeNum" min="5" max="80" value="20" onfocus="pushHistory()" oninput="syncModalSize(this.value, 'number', 'logo')">
+                                    <span class="num-unit">%</span>
+                                    <div class="spin-btns">
+                                        <button class="spin-btn" onclick="stepModalSize(1, 'logo')"><i class="fa-solid fa-chevron-up"></i></button>
+                                        <button class="spin-btn" onclick="stepModalSize(-1, 'logo')"><i class="fa-solid fa-chevron-down"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row"><div class="form-col"><label class="form-label">Opacity</label><select id="m_logoOpacity" onchange="commitChange('logoOpacity', parseFloat(this.value))"><option value="1.0">100%</option><option value="0.5">50%</option><option value="0.2">20%</option></select></div></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="accordion-header" onclick="toggleAccordion(this)"><span class="accordion-title">Text</span><i class="fa-solid fa-chevron-right accordion-icon"></i></div>
+                    <div class="accordion-content">
+                        <div class="form-row"><input type="text" id="m_text" placeholder="Content" oninput="previewChange('text', this.value)" onchange="commitChange('text', this.value)"></div>
+                        <div class="form-row"><select id="m_textPos" onchange="commitChange('textPos', this.value)"><option value="br">Bot Right</option><option value="bl">Bot Left</option><option value="tr">Top Right</option><option value="tl">Top Left</option><option value="center">Center</option></select><select id="m_textColor" onchange="commitChange('textColor', this.value)"><option value="white">White</option><option value="black">Black</option><option value="green">Green</option></select></div>
+                        
+                        <div class="form-row">
+                            <div class="form-col" style="flex: 1;">
+                                <label class="form-label">Size</label>
+                                <input type="range" id="m_textSize" min="0.01" max="0.15" step="0.005" value="0.03" onmousedown="startSliderInteraction()" oninput="syncModalSize(this.value, 'range', 'text')">
+                            </div>
+                            <div class="form-col" style="width: 90px; flex: none;">
+                                <div class="num-input-group">
+                                    <input type="number" id="m_textSizeNum" min="1" max="15" value="3" onfocus="pushHistory()" oninput="syncModalSize(this.value, 'number', 'text')">
+                                    <span class="num-unit">%</span>
+                                    <div class="spin-btns">
+                                        <button class="spin-btn" onclick="stepModalSize(1, 'text')"><i class="fa-solid fa-chevron-up"></i></button>
+                                        <button class="spin-btn" onclick="stepModalSize(-1, 'text')"><i class="fa-solid fa-chevron-down"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group">
+                     <div class="accordion-header" onclick="toggleAccordion(this)"><span class="accordion-title">Border</span><i class="fa-solid fa-chevron-right accordion-icon"></i></div>
+                    <div class="accordion-content">
+                        <div class="form-row"><select id="m_borderWidth" onchange="commitChange('borderWidth', parseInt(this.value))"><option value="0">None</option><option value="15">Thin</option><option value="40">Thick</option></select><select id="m_borderColor" onchange="commitChange('borderColor', this.value)"><option value="white">White</option><option value="black">Black</option><option value="green">Green</option></select></div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <button class="btn btn-success" id="saveBtn" onclick="saveChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAccordion(element) {
+            const currentGroup = element.closest('.control-group');
+            const container = element.closest('.sidebar, .modal-sidebar');
+            const allGroups = container.querySelectorAll('.control-group.open');
+            allGroups.forEach(group => { if (group !== currentGroup) group.classList.remove('open'); });
+            currentGroup.classList.toggle('open');
+        }
+
+        const BRAND_GREEN = "#275a3a";
+        const assets = {
+            green: { src: 'youth_green.png', img: new Image() },
+            black: { src: 'youth_black.png', img: new Image() },
+            white: { src: 'youth_white.png', img: new Image() }
+        };
+
+        let loadedCount = 0;
+        for(let k in assets) {
+            assets[k].img.onload = () => { loadedCount++; if(loadedCount===3) document.getElementById('initLoader').style.display='none'; };
+            assets[k].img.src = assets[k].src;
+        }
+
+        let appState = [];
+        let currentEditId = null;
+        let draftSettings = null; 
+        let cropState = { isDragging: false, startX: 0, startY: 0, initialTx: 0, initialTy: 0 };
+        
+        // MODAL HISTORY
+        let undoStack = [], redoStack = [];
+        let isSliderInteracting = false;
+        
+        // GLOBAL HISTORY & STATE
+        let g_lastGlobalState = null;
+        let g_undoStack = [], g_redoStack = [];
+        let g_isSliderInteracting = false;
+        let autoApplyTimer;
+
+        const fileInput = document.getElementById('fileInput');
+        fileInput.addEventListener('change', handleUpload);
+
+        function toggleSidebar() { document.getElementById('mainSidebar').classList.toggle('mobile-open'); }
+
+        async function handleUpload() {
+            const files = fileInput.files;
+            if(!files.length) return;
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('downloadBtn').disabled = false;
+            
+            // Initialize last state
+            g_lastGlobalState = getGlobalSettings();
+
+            const globals = g_lastGlobalState;
+            for(let i=0; i<files.length; i++) {
+                const item = {
+                    id: Date.now() + i,
+                    file: files[i],
+                    settings: { ...globals, panX: 0, panY: 0, zoom: 1 },
+                    blob: null, blobUrl: null, locked: false, origWidth: 0, origHeight: 0
+                };
+                appState.push(item);
+                createGridItem(item);
+                await processImage(item);
+            }
+            updateGalleryCount();
+        }
+
+        function getGlobalSettings() {
+            return {
+                ratio: document.getElementById('g_ratio').value,
+                logoColor: document.getElementById('g_logoColor').value,
+                logoPos: document.getElementById('g_logoPos').value,
+                logoSize: parseFloat(document.getElementById('g_logoSize').value),
+                logoOpacity: parseFloat(document.getElementById('g_logoOpacity').value),
+                text: document.getElementById('g_text').value,
+                textPos: document.getElementById('g_textPos').value,
+                textSize: parseFloat(document.getElementById('g_textSize').value),
+                textColor: document.getElementById('g_textColor').value,
+                borderWidth: parseInt(document.getElementById('g_borderWidth').value),
+                borderColor: document.getElementById('g_borderColor').value
+            };
+        }
+
+        // --- AUTO APPLY LOGIC ---
+        function triggerAutoApply() {
+            clearTimeout(autoApplyTimer);
+            autoApplyTimer = setTimeout(updateAllUnlockedImages, 300);
+        }
+
+        async function updateAllUnlockedImages() {
+            const globals = getGlobalSettings();
+            const promises = appState.map(async (item) => {
+                if(!item.locked) {
+                    item.settings = { ...item.settings, ...globals };
+                    document.getElementById(`card-${item.id}`).classList.add('processing');
+                    await processImage(item);
+                }
+            });
+            await Promise.all(promises);
+        }
+
+        // --- GLOBAL UI LOGIC & HISTORY ---
+        function restoreGlobalState(s) {
+            document.getElementById('g_ratio').value = s.ratio;
+            document.getElementById('g_logoColor').value = s.logoColor;
+            document.getElementById('g_logoPos').value = s.logoPos;
+            document.getElementById('g_logoOpacity').value = s.logoOpacity;
+            document.getElementById('g_text').value = s.text;
+            document.getElementById('g_textPos').value = s.textPos;
+            document.getElementById('g_textColor').value = s.textColor;
+            document.getElementById('g_borderWidth').value = s.borderWidth;
+            document.getElementById('g_borderColor').value = s.borderColor;
+            
+            syncGlobalSize(s.logoSize, 'range', 'logo');
+            syncGlobalSize(s.textSize, 'range', 'text');
+            
+            // After restoring inputs, update tracking var and apply
+            g_lastGlobalState = s;
+            updateGlobalHistoryButtons();
+            updateAllUnlockedImages(); 
+        }
+
+        function commitGlobalChange() {
+            // Push previous state (g_lastGlobalState) to Undo
+            if (g_lastGlobalState) {
+                g_undoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
+            }
+            
+            // Update current state tracker
+            g_lastGlobalState = getGlobalSettings();
+            
+            // Clear Redo since we made a new change
+            g_redoStack = [];
+            
+            updateGlobalHistoryButtons();
+            updateAllUnlockedImages();
+        }
+
+        function undoGlobalAction() {
+            if (g_undoStack.length === 0) return;
+            
+            // Save current to Redo
+            g_redoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
+            
+            // Pop Previous
+            const prev = g_undoStack.pop();
+            
+            restoreGlobalState(prev);
+        }
+
+        function redoGlobalAction() {
+            if (g_redoStack.length === 0) return;
+            
+            // Save current to Undo
+            g_undoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
+            
+            // Pop Next
+            const next = g_redoStack.pop();
+            
+            restoreGlobalState(next);
+        }
+
+        function updateGlobalHistoryButtons() {
+            document.getElementById('g_undoBtn').disabled = g_undoStack.length === 0;
+            document.getElementById('g_redoBtn').disabled = g_redoStack.length === 0;
+        }
+
+        // Special handling for Sliders to only commit on start of interaction
+        function startGlobalSlider() {
+            // Only push if we aren't already dragging
+            if(g_isSliderInteracting) return;
+            g_isSliderInteracting = true;
+            
+            // Push current state before drag starts
+            if (g_lastGlobalState) {
+                g_undoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
+                g_redoStack = [];
+                updateGlobalHistoryButtons();
+            }
+        }
+        
+        // When drag ends, we update the "Last State" to the new value
+        function endGlobalSlider() {
+            if(!g_isSliderInteracting) return;
+            g_isSliderInteracting = false;
+            g_lastGlobalState = getGlobalSettings();
+        }
+        
+        document.addEventListener('mouseup', endGlobalSlider);
+        document.addEventListener('touchend', endGlobalSlider);
+
+        function syncGlobalSize(val, source, type) {
+            let floatVal, intVal;
+            const min = (type === 'logo') ? 0.05 : 0.01;
+            const max = (type === 'logo') ? 0.8 : 0.15;
+            const minPct = (type === 'logo') ? 5 : 1;
+            const maxPct = (type === 'logo') ? 80 : 15;
+
+            if(source === 'range') { 
+                floatVal = parseFloat(val); 
+                intVal = Math.round(floatVal * 100); 
+            } else { 
+                intVal = parseInt(val); 
+                if(isNaN(intVal)) intVal = minPct; 
+                if(intVal < minPct) intVal = minPct; 
+                if(intVal > maxPct) intVal = maxPct;
+                floatVal = intVal / 100; 
+            }
+            
+            const prefix = (type === 'logo') ? 'g_logoSize' : 'g_textSize';
+            document.getElementById(prefix).value = floatVal;
+            document.getElementById(prefix + 'Num').value = intVal;
+            
+            triggerAutoApply();
+        }
+
+        function stepGlobalSize(dir, type) {
+            // Treat step click like a distinct commit
+            if (g_lastGlobalState) {
+                g_undoStack.push(JSON.parse(JSON.stringify(g_lastGlobalState)));
+                g_redoStack = [];
+                updateGlobalHistoryButtons();
+            }
+            
+            const id = (type === 'logo') ? 'g_logoSizeNum' : 'g_textSizeNum';
+            let current = parseInt(document.getElementById(id).value) || ((type === 'logo')?20:3);
+            syncGlobalSize(current + dir, 'number', type);
+            
+            // Update tracker
+            g_lastGlobalState = getGlobalSettings();
+        }
+
+        function toggleLock(e, id) {
+            e.stopPropagation(); 
+            const item = appState.find(i => i.id === id);
+            item.locked = !item.locked;
+            const card = document.getElementById(`card-${id}`);
+            const btn = card.querySelector('.lock-btn i');
+            if(item.locked) { card.classList.add('locked'); btn.className = 'fa-solid fa-lock'; }
+            else { card.classList.remove('locked'); btn.className = 'fa-solid fa-lock-open'; }
+        }
+
+        function getColorHex(c) {
+            if(c === 'white') return '#ffffff'; if(c === 'black') return '#000000'; if(c === 'green') return BRAND_GREEN; return '#ffffff';
+        }
+
+        function processImage(item) {
+            return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.readAsDataURL(item.file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        item.origWidth = img.width; item.origHeight = img.height; 
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const s = item.settings;
+
+                        let w, h;
+                        if (s.ratio === 'portrait') { w = 1080; h = 1350; } 
+                        else if (s.ratio === 'landscape') { w = 1200; h = 630; } 
+                        else {
+                            const max = 2000; w = img.width; h = img.height;
+                            if(w>max || h>max) { const sc = Math.min(max/w, max/h); w*=sc; h*=sc; }
+                        }
+                        canvas.width = w; canvas.height = h;
+
+                        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,w,h);
+
+                        const coverScale = Math.max(w / img.width, h / img.height);
+                        const finalScale = coverScale * (s.zoom || 1);
+                        const drawW = img.width * finalScale;
+                        const drawH = img.height * finalScale;
+                        const drawX = ((w - drawW) / 2) + (s.panX || 0);
+                        const drawY = ((h - drawH) / 2) + (s.panY || 0);
+
+                        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+                        drawWatermarks(ctx, w, h, s);
+
+                        canvas.toBlob(blob => {
+                            if(item.blobUrl) URL.revokeObjectURL(item.blobUrl);
+                            item.blob = blob; item.blobUrl = URL.createObjectURL(blob);
+                            const gridImg = document.getElementById(`img-${item.id}`);
+                            if(gridImg) gridImg.src = item.blobUrl;
+                            document.getElementById(`card-${item.id}`).classList.remove('processing');
+                            resolve();
+                        }, 'image/jpeg', 0.90);
+                    };
+                    img.src = e.target.result;
+                };
+            });
+        }
+
+        function drawWatermarks(ctx, w, h, s) {
+            let borderThickness = 0;
+            const borderColor = getColorHex(s.borderColor);
+            if(s.borderWidth > 0) {
+                ctx.strokeStyle = borderColor;
+                borderThickness = s.borderWidth * (w/1000); 
+                ctx.lineWidth = borderThickness;
+                ctx.strokeRect(borderThickness/2, borderThickness/2, w-borderThickness, h-borderThickness);
+            }
+
+            const safeMargin = (w * 0.04) + borderThickness;
+            const logoImg = assets[s.logoColor].img;
+            const aspect = logoImg.height / logoImg.width;
+            const logoW = w * (s.logoSize || 0.2); 
+            const logoH = logoW * aspect;
+            
+            let lx, ly;
+            switch(s.logoPos) {
+                case 'tl': lx = safeMargin; ly = safeMargin; break;
+                case 'tr': lx = w - logoW - safeMargin; ly = safeMargin; break;
+                case 'bl': lx = safeMargin; ly = h - logoH - safeMargin; break;
+                case 'center': lx = (w-logoW)/2; ly = (h-logoH)/2; break;
+                default: lx = w - logoW - safeMargin; ly = h - logoH - safeMargin; break; 
+            }
+
+            ctx.save(); ctx.globalAlpha = s.logoOpacity; ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 5;
+            ctx.drawImage(logoImg, lx, ly, logoW, logoH); ctx.restore();
+
+            if(s.text && s.text.trim() !== "") {
+                const fontSize = w * (s.textSize || 0.03);
+                ctx.font = `600 ${fontSize}px 'Inter', sans-serif`;
+                ctx.fillStyle = getColorHex(s.textColor); ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 4;
+                let tx, ty;
+                switch(s.textPos) {
+                    case 'tl': ctx.textAlign = 'left'; tx = safeMargin; ty = safeMargin + fontSize; break;
+                    case 'tr': ctx.textAlign = 'right'; tx = w - safeMargin; ty = safeMargin + fontSize; break;
+                    case 'bl': ctx.textAlign = 'left'; tx = safeMargin; ty = h - safeMargin; break;
+                    case 'center': ctx.textAlign = 'center'; tx = w/2; ty = h/2; break;
+                    default: ctx.textAlign = 'right'; tx = w - safeMargin; ty = h - safeMargin; break;
+                }
+                ctx.fillText(s.text, tx, ty);
+            }
+        }
+
+        function createGridItem(item) {
+            const div = document.createElement('div');
+            div.className = 'photo-card processing';
+            div.id = `card-${item.id}`;
+            div.onclick = () => openModal(item.id);
+            div.innerHTML = `<div class="lock-btn" onclick="toggleLock(event, ${item.id})"><i class="fa-solid fa-lock-open"></i></div><img id="img-${item.id}" src=""><div class="card-loader"><i class="fa-solid fa-spinner fa-spin" style="color:white"></i></div>`;
+            document.getElementById('grid').appendChild(div);
+        }
+        function updateGalleryCount() { document.getElementById('galleryTitle').innerText = `Gallery (${appState.length})`; }
+
+        function openModal(id) {
+            currentEditId = id;
+            const item = appState.find(i => i.id === id);
+            draftSettings = JSON.parse(JSON.stringify(item.settings));
+            
+            // Reset modal history for the new item
+            undoStack = []; redoStack = []; updateHistoryButtons();
+            
+            // Reset the save button text
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.innerText = 'Save Changes';
+            saveBtn.disabled = false;
+
+            syncModalUI(draftSettings);
+            setupCropStage(item);
+            document.getElementById('editorModal').classList.add('active');
+        }
+
+        function setupCropStage(item) {
+            const stage = document.getElementById('cropStage');
+            const imgEl = document.getElementById('cropImg');
+            const reader = new FileReader();
+            reader.readAsDataURL(item.file);
+            reader.onload = (e) => {
+                imgEl.src = e.target.result;
+                imgEl.onload = () => {
+                    updateStageDimensions(draftSettings.ratio);
+                    applyCropVisuals(); 
+                    drawPreviewOverlay(); 
+                };
+            };
+            stage.onmousedown = startDrag;
+            stage.ontouchstart = startDrag;
+        }
+
+        function updateStageDimensions(ratio) {
+            const stage = document.getElementById('cropStage');
+            const overlay = document.getElementById('previewOverlay');
+            const baseH = 500; 
+            let w, h;
+            if(ratio === 'portrait') { h = baseH; w = baseH * (1080/1350); }
+            else if(ratio === 'landscape') { w = 600; h = 600 * (630/1200); }
+            else { w = 500; h = 500 * (appState.find(i=>i.id===currentEditId).origHeight / appState.find(i=>i.id===currentEditId).origWidth); }
+
+            if(window.innerWidth < 600) {
+                 w = window.innerWidth * 0.9;
+                 if(ratio === 'portrait') h = w * (1350/1080);
+                 else if(ratio === 'landscape') h = w * (630/1200);
+            }
+            stage.style.width = w + 'px'; stage.style.height = h + 'px';
+            overlay.width = w; overlay.height = h;
+        }
+
+        function drawPreviewOverlay() {
+            const canvas = document.getElementById('previewOverlay');
+            const ctx = canvas.getContext('2d');
+            const s = draftSettings;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let virtualW = 2000, virtualH = 2000;
+            if (s.ratio === 'portrait') { virtualW = 1080; virtualH = 1350; }
+            else if (s.ratio === 'landscape') { virtualW = 1200; virtualH = 630; }
+            else {
+                const item = appState.find(i=>i.id===currentEditId);
+                const max = 2000; let w=item.origWidth; let h=item.origHeight;
+                if(w>max||h>max){ const sc=Math.min(max/w,max/h); w*=sc; h*=sc; }
+                virtualW=w; virtualH=h;
+            }
+            const scaleX = canvas.width / virtualW;
+            const scaleY = canvas.height / virtualH;
+            ctx.save(); ctx.scale(scaleX, scaleY);
+            drawWatermarks(ctx, virtualW, virtualH, s);
+            ctx.restore();
+        }
+
+        // --- MODAL SIZE LOGIC ---
+        function syncModalSize(val, source, type) {
+            let floatVal, intVal;
+            const min = (type === 'logo') ? 0.05 : 0.01;
+            const max = (type === 'logo') ? 0.8 : 0.15;
+            const minPct = (type === 'logo') ? 5 : 1;
+            const maxPct = (type === 'logo') ? 80 : 15;
+
+            if(source === 'range') { 
+                floatVal = parseFloat(val); 
+                intVal = Math.round(floatVal * 100); 
+            } else { 
+                intVal = parseInt(val); 
+                if(isNaN(intVal)) intVal = minPct; 
+                if(intVal < minPct) intVal = minPct; 
+                if(intVal > maxPct) intVal = maxPct;
+                floatVal = intVal / 100; 
+            }
+            
+            const prefix = (type === 'logo') ? 'm_logoSize' : 'm_textSize';
+            document.getElementById(prefix).value = floatVal;
+            document.getElementById(prefix + 'Num').value = intVal;
+            
+            if(type === 'logo') draftSettings.logoSize = floatVal;
+            else draftSettings.textSize = floatVal;
+            
+            drawPreviewOverlay();
+        }
+        
+        function stepModalSize(dir, type) {
+            pushHistory();
+            const id = (type === 'logo') ? 'm_logoSizeNum' : 'm_textSizeNum';
+            let current = parseInt(document.getElementById(id).value) || ((type === 'logo')?20:3);
+            syncModalSize(current + dir, 'number', type);
+        }
+
+        // --- HISTORY ---
+        function pushHistory() {
+            undoStack.push(JSON.parse(JSON.stringify(draftSettings)));
+            redoStack = [];
+            updateHistoryButtons();
+        }
+        function undoAction() {
+            if(undoStack.length === 0) return;
+            redoStack.push(JSON.parse(JSON.stringify(draftSettings)));
+            draftSettings = undoStack.pop();
+            restoreState();
+        }
+        function redoAction() {
+            if(redoStack.length === 0) return;
+            undoStack.push(JSON.parse(JSON.stringify(draftSettings)));
+            draftSettings = redoStack.pop();
+            restoreState();
+        }
+        function restoreState() {
+            syncModalUI(draftSettings);
+            updateStageDimensions(draftSettings.ratio);
+            applyCropVisuals();
+            drawPreviewOverlay();
+            updateHistoryButtons();
+        }
+        function updateHistoryButtons() {
+            document.getElementById('undoBtn').disabled = undoStack.length === 0;
+            document.getElementById('redoBtn').disabled = redoStack.length === 0;
+        }
+        
+        // Helper to handle slider history on drag start
+        function startSliderInteraction() {
+            if (isSliderInteracting) return;
+            isSliderInteracting = true;
+            pushHistory();
+        }
+        document.addEventListener('mouseup', () => isSliderInteracting = false);
+        document.addEventListener('touchend', () => isSliderInteracting = false);
+
+
+        // --- INPUTS ---
+        function previewChange(key, val) {
+            draftSettings[key] = val;
+            if(key === 'ratio') { updateStageDimensions(val); applyCropVisuals(); }
+            drawPreviewOverlay();
+        }
+        function commitChange(key, val) {
+            pushHistory();
+            draftSettings[key] = val;
+            if(key === 'ratio') { updateStageDimensions(val); applyCropVisuals(); }
+            drawPreviewOverlay();
+        }
+
+        function syncModalUI(s) {
+            document.getElementById('m_ratio').value = s.ratio;
+            document.getElementById('m_logoColor').value = s.logoColor;
+            document.getElementById('m_logoPos').value = s.logoPos;
+            document.getElementById('m_logoOpacity').value = s.logoOpacity;
+            document.getElementById('m_text').value = s.text;
+            document.getElementById('m_textPos').value = s.textPos;
+            document.getElementById('m_textColor').value = s.textColor;
+            document.getElementById('m_borderWidth').value = s.borderWidth;
+            document.getElementById('m_borderColor').value = s.borderColor;
+            document.getElementById('zoomSlider').value = s.zoom || 1;
+            syncModalSize(s.logoSize || 0.2, 'range', 'logo');
+            syncModalSize(s.textSize || 0.03, 'range', 'text');
+        }
+
+        function startDrag(e) {
+            e.preventDefault();
+            pushHistory();
+            cropState.isDragging = true;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            cropState.startX = clientX; cropState.startY = clientY;
+            cropState.initialTx = draftSettings.panX || 0; cropState.initialTy = draftSettings.panY || 0;
+            document.addEventListener('mousemove', onDrag); document.addEventListener('touchmove', onDrag);
+            document.addEventListener('mouseup', stopDrag); document.addEventListener('touchend', stopDrag);
+        }
+        function onDrag(e) {
+            if(!cropState.isDragging) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const dx = clientX - cropState.startX; const dy = clientY - cropState.startY;
+            const stage = document.getElementById('cropStage');
+            let canvasW = 2000;
+             if(draftSettings.ratio === 'portrait') canvasW = 1080;
+             else if(draftSettings.ratio === 'landscape') canvasW = 1200;
+            const scaleFactor = canvasW / stage.offsetWidth;
+            draftSettings.panX = cropState.initialTx + (dx * scaleFactor);
+            draftSettings.panY = cropState.initialTy + (dy * scaleFactor);
+            applyCropVisuals();
+        }
+        function stopDrag() {
+            cropState.isDragging = false;
+            document.removeEventListener('mousemove', onDrag); document.removeEventListener('touchmove', onDrag);
+            document.removeEventListener('mouseup', stopDrag); document.removeEventListener('touchend', stopDrag);
+        }
+        function handleZoomInput(val) { 
+            if(!isSliderInteracting) startSliderInteraction();
+            draftSettings.zoom = parseFloat(val); 
+            applyCropVisuals();
+            document.getElementById('zoomValueDisplay').innerText = Math.round(draftSettings.zoom * 100) + '%';
+        }
+        function applyCropVisuals() {
+            const imgEl = document.getElementById('cropImg');
+            const stage = document.getElementById('cropStage');
+            const item = appState.find(i=>i.id===currentEditId);
+            let canvasW = 2000; let canvasH = 2000;
+            if(draftSettings.ratio === 'portrait') { canvasW = 1080; canvasH = 1350; }
+            else if(draftSettings.ratio === 'landscape') { canvasW = 1200; canvasH = 630; }
+            else { 
+                 const max = 2000; let w=item.origWidth; let h=item.origHeight;
+                 if(w>max||h>max){ const sc=Math.min(max/w,max/h); w*=sc; h*=sc; }
+                 canvasW=w; canvasH=h;
+            }
+            const coverScale = Math.max(canvasW / item.origWidth, canvasH / item.origHeight);
+            const finalScale = coverScale * (draftSettings.zoom || 1);
+            const cssRatio = stage.offsetWidth / canvasW;
+            const tx = (draftSettings.panX || 0) * cssRatio;
+            const ty = (draftSettings.panY || 0) * cssRatio;
+            const cssScale = finalScale * cssRatio;
+            const imgW = item.origWidth * cssScale;
+            const imgH = item.origHeight * cssScale;
+            const cx = (stage.offsetWidth - imgW) / 2;
+            const cy = (stage.offsetHeight - imgH) / 2;
+            imgEl.style.width = item.origWidth + 'px'; 
+            imgEl.style.transform = `translate(${cx + tx}px, ${cy + ty}px) scale(${cssScale})`;
+            imgEl.style.transformOrigin = '0 0';
+        }
+
+        async function saveChanges() {
+            if(!currentEditId) return;
+            const item = appState.find(i => i.id === currentEditId);
+            item.settings = JSON.parse(JSON.stringify(draftSettings));
+            const btn = document.getElementById('saveBtn');
+            const originalText = btn.innerText;
+            
+            btn.innerText = 'Saved!';
+            btn.disabled = true;
+            
+            await processImage(item);
+            
+            // Reset button state after 2 seconds if user is still on same item
+            setTimeout(() => {
+                if(currentEditId === item.id) {
+                    btn.innerText = 'Save Changes';
+                    btn.disabled = false;
+                }
+            }, 2000);
+        }
+        
+        function closeModal() {
+            document.getElementById('editorModal').classList.remove('active');
+            currentEditId = null; draftSettings = null; 
+        }
+        function downloadZip() {
+            if(!appState.length) return;
+            const btn = document.getElementById('downloadBtn');
+            btn.innerText = 'Zipping...'; btn.disabled = true;
+            const zip = new JSZip();
+            const folder = zip.folder("Watermarked_Photos");
+            appState.forEach(item => { if(item.blob) folder.file(item.file.name, item.blob); });
+            zip.generateAsync({type:"blob"}).then(content => {
+                saveAs(content, "WatermarkStudio_Export.zip");
+                btn.innerText = 'Download ZIP'; btn.disabled = false;
+            });
+        }
+        document.addEventListener('keydown', (e) => {
+            if(!document.getElementById('editorModal').classList.contains('active')) return;
+            if(e.key === 'Escape') closeModal();
+            if(e.key === 'Enter') saveChanges();
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undoAction(); }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redoAction(); }
+            
+            // Arrow key navigation
+            if (e.key === 'ArrowLeft') navigateModal(-1);
+            if (e.key === 'ArrowRight') navigateModal(1);
+        });
+
+        // MODAL NAVIGATION
+        function navigateModal(direction) {
+            if (!currentEditId || appState.length <= 1) return;
+
+            const currentIndex = appState.findIndex(i => i.id === currentEditId);
+            let newIndex = currentIndex + direction;
+
+            // Handle wrap-around
+            if (newIndex < 0) newIndex = appState.length - 1;
+            if (newIndex >= appState.length) newIndex = 0;
+
+            const newItem = appState[newIndex];
+            
+            // Reset modal history for the new item
+            undoStack = []; redoStack = []; updateHistoryButtons();
+            
+            // Open the new item in the modal
+            openModal(newItem.id);
+        }
+    </script>
+</body>
+</html>
